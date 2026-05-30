@@ -39,11 +39,18 @@ namespace ApiInteligenteTareas.Controllers
         [HttpPost]
         public async Task<ActionResult<Tarea>> PostTarea(Tarea tarea)
         {
+            if (!ModelState.IsValid)
+                return BadRequest(ModelState);
+
+            if (!Enum.IsDefined(typeof(EstadoTarea), tarea.Estado))
+                return BadRequest("Estado inválido.");
+
+            if (!Enum.IsDefined(typeof(PrioridadTarea), tarea.Prioridad))
+                return BadRequest("Prioridad inválida.");
+
             if (tarea.FechaVencimiento.Date < DateTime.Today)
-            {
                 return BadRequest(
                     "La fecha de vencimiento no puede ser menor a la fecha actual.");
-            }
 
             tarea.FechaCreacion = DateTime.Now;
 
@@ -60,28 +67,34 @@ namespace ApiInteligenteTareas.Controllers
         [HttpPut("{id}")]
         public async Task<IActionResult> PutTarea(int id, Tarea tarea)
         {
+            if (!ModelState.IsValid)
+                return BadRequest(ModelState);
+
             if (id != tarea.Id)
-                return BadRequest();
+                return BadRequest("El ID de la URL no coincide con el ID enviado.");
+
+            if (!Enum.IsDefined(typeof(EstadoTarea), tarea.Estado))
+                return BadRequest("Estado inválido.");
+
+            if (!Enum.IsDefined(typeof(PrioridadTarea), tarea.Prioridad))
+                return BadRequest("Prioridad inválida.");
 
             if (tarea.FechaVencimiento.Date < DateTime.Today)
-            {
                 return BadRequest(
                     "La fecha de vencimiento no puede ser menor a la fecha actual.");
-            }
 
-            _context.Entry(tarea).State = EntityState.Modified;
+            var tareaExistente = await _context.Tareas.FindAsync(id);
 
-            try
-            {
-                await _context.SaveChangesAsync();
-            }
-            catch (DbUpdateConcurrencyException)
-            {
-                if (!_context.Tareas.Any(e => e.Id == id))
-                    return NotFound();
+            if (tareaExistente == null)
+                return NotFound();
 
-                throw;
-            }
+            tareaExistente.Titulo = tarea.Titulo;
+            tareaExistente.Descripcion = tarea.Descripcion;
+            tareaExistente.Estado = tarea.Estado;
+            tareaExistente.Prioridad = tarea.Prioridad;
+            tareaExistente.FechaVencimiento = tarea.FechaVencimiento;
+
+            await _context.SaveChangesAsync();
 
             return NoContent();
         }
