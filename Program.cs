@@ -1,6 +1,7 @@
 using ApiInteligenteTareas.Data;
 using Microsoft.EntityFrameworkCore;
 using System.Text.Json.Serialization;
+using ApiInteligenteTareas.Services;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -20,7 +21,7 @@ builder.Services.AddControllers()
 // Swagger
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
-
+builder.Services.AddSingleton<SentimientoService>();
 builder.Services.AddHttpClient();
 
 var app = builder.Build();
